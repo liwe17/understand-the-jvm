@@ -206,3 +206,47 @@
 
 - 多数情况下,对象在新生代Eden区中分配,当Eden区没有足够空间进行分配时,虚拟机会发起一次Minor GC
     - -XX:+PrintGCDetails,打印收集器日志参数
+        - 虚拟机在发生垃圾收集行为时打印内存回收日志,并且在进程退出的时候输出当前的内存各区域分配情况
+
+- 业务代码
+    - com.weiliai.chapter3.Chapter3.testAllocation
+
+### 大对象直接进入老年代
+
+- 大对象就是指需要大量连续内存空间的Java对象,最典型的大对象便是那种很长的字符串,或者元素数量很庞大的数组
+    - -XX:PretenureSizeThreshold,指定大于该设置值的对象直接在老年代分配
+        - 是避免在Eden区及两个Survivor区之间来回复制,产生大量的内存复制操作
+
+- 业务代码
+    - com.weiliai.chapter3.Chapter3.testPretenureSizeThreshold
+
+### 长期存活的对象将进入老年代
+
+- HotSpot虚拟机中多数收集器都采用了分代收集来管理堆内存,那内存回收时就必须能决策哪些存活对象应当放在新生代,哪些存活对象放在老年代中
+    - 虚拟机给每个对象定义了一个对象年龄(Age)计数器,存储在对象头中
+    - 对象在Survivor区中每熬过一次Minor GC,年龄就增加1岁,增加到一定程度(默认为15),就会被晋升到老年代中
+    - -XX:MaxTenuringThreshold=参数值,默认为15
+
+- 业务代码
+    - com.weiliai.chapter3.Chapter3.testTenuringThreshold
+
+### 动态对象年龄判定
+
+- 为了能更好地适应不同程序的内存状况,HotSpot虚拟机并不是永远要求对象的年龄必须达到-XX：MaxTenuringThreshold才能晋升老年代
+    - 如果在Survivor空间中相同年龄所有对象大小的总和大于Survivor空间的一半,年龄大于或等于该年龄的对象就可以直接进入老年代
+
+- 业务代码
+    - com.weiliai.chapter3.Chapter3.testTenuringThreshold2
+
+### 空间分配担保
+
+- 在发生MinorGC之前,虚拟机必须先检查老年代最大可用的连续空间是否大于新生代所有对象总空间
+    - 如果这个条件成立,那这一次MinorGC可以确保是安全的
+    - 如果不成立,则虚拟机会先查看-XX:HandlePromotionFailure参数的设置值是否允许担保失败(Handle Promotion Failure)
+        - 如果允许,那会继续检查老年代最大可用的连续空间是否大于历次晋升到老年代对象的平均大小
+            - 如果大于将尝试进行一次MinorGC,尽管这次MinorGC是有风险的
+            - 如果小于,那这时就要改为进行一次FullGC
+        - 如果不允许,那这时就要改为进行一次FullGC
+
+- 业务代码
+    - com.weiliai.chapter3.Chapter3.testHandlePromotion
