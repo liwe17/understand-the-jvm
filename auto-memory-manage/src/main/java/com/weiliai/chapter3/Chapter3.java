@@ -2,6 +2,8 @@ package com.weiliai.chapter3;
 
 import org.junit.Test;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * 第三章相关代码
  *
@@ -86,5 +88,13 @@ public class Chapter3 {
         allocation5 = null;
         allocation6 = null;
         allocation7 = new byte[2 * _1MB];
+    }
+
+    @Test
+    public void testCommand() throws InterruptedException {
+        for (; ; ) {
+            TimeUnit.SECONDS.sleep(1);
+            System.out.println("testCommand");
+        }
     }
 }
