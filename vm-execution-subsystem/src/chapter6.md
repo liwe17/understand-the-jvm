@@ -41,7 +41,7 @@
 - 紧接着主,次版本号之后的是常量池入口,常量池可以比喻为Class文件里的资源仓库
     - 它是Class文件结构中与其他项目关联最多的数据,通常也是占用Class文件空间最大的数据项目之一,另外,它还是在Class文件中第一个出现的表类型数据项目
     - 由于常量池中常量的数量是不固定的,所以在常量池的入口需要放置一项u2类型的数据,代表常量池容量计数值(constant_pool_count)
-        - 常量池容量(偏移地址：0x00000008)为十六进制数0x0016,即十进制的22,这就代表常量池中有21项常量,索引值范围为1~21
+        - 常量池容量(偏移地址:0x00000008)为十六进制数0x0016,即十进制的22,这就代表常量池中有21项常量,索引值范围为1~21
     - Class文件结构中只有常量池的容量计数是从1开始,对于其他集合类型,包括接口索引集合,字段表集合,方法表集合等的容量计数都与一般习惯相同,是从0开始
 
 
@@ -55,14 +55,141 @@
         - 方法句柄和方法类型(Method Handle,Method Type,Invoke Dynamic)
         - 动态调用点和动态常量(Dynamically-Computed Call Site,Dynamically-Computed Constant)
 
+### 访问标志
 
+- 在常量池结束之后,紧接着的2个字节代表访问标志(access_flags),这个标识用于识别一些类或者接口层次的访问信息
 
+### 类索引,父类索引与接口索引集合
 
+- 类索引(this_class)和父类索引(super_class)都是一个u2类型的数据,而接口索引集合(interfaces)是一组u2类型的数据的集合,Class文件中由这三项数据来确定该类型的继承关系
+    - 类索引用于确定这个类的全限定名,父类索引用于确定这个类的父类的全限定名
+    - 接口索引集合就用来描述这个类实现了哪些接口
 
+### 字段表集合
 
+- 字段表(field_info)用于描述接口或者类中声明的变量
 
+### 方法表集合
 
+- 方法表的结构如同字段表一样,依次包括访问标志(access_flags),名称索引(name_index),描述符索引(descriptor_index),属性表集合(attributes)几项
 
+### 属性表集合
+
+- 属性表(attribute_info)在前面的讲解之中已经出现过数次,Class文件,字段表,方法表都可以携带自己的属性表集合,以描述某些场景专有的信息
+
+## 字节码指令简介
+
+- Java虚拟机的指令由一个字节长度的,代表着某种特定操作含义的数字(称为操作码,opcode)以及跟随其后的零至多个代表此操作所需的参数(称为操作数,operand)构成
+- Java虚拟机采用面向操作数栈而不是面向寄存器的架构,所以大多数指令都不包含操作数,只有一个操作码,指令参数都存放在操作数栈中
+
+### 字节码与数据类型
+
+- 在Java虚拟机的指令集中,大多数指令都包含其操作所对应的数据类型信息
+
+### 加载和存储指令
+
+- 加载和存储指令用于将数据在栈帧中的局部变量表和操作数栈之间来回传输
+    - 将一个局部变量加载到操作栈
+        - iload,iload_<n>,lload,lload_<n>,fload,fload_<n>,dload,dload_<n>,aload,aload_<n>
+    - 将一个数值从操作数栈存储到局部变量表
+        - istore,istore_<n>,lstore,lstore_<n>,fstore,fstore_<n>,dstore,dstore_<n>,astore,astore_<n>
+    - 将一个常量加载到操作数栈
+        - bipush,sipush,ldc,ldc_w,ldc2_w,aconst_null,iconst_m1,iconst_<i>,lconst_<l>,fconst_<f>,dconst_<d>
+    - 扩充局部变量表的访问索引的指令
+        - wide
+
+- 存储数据的操作数栈和局部变量表主要由加载和存储指令进行操作.除此之外,还有少量指令,如访问对象的字段或数组元素的指令也会向操作数栈传输数据
+
+### 运算指令
+
+- 算术指令用于对两个操作数栈上的值进行某种特定运算,并把结果重新存入到操作栈顶
+- 运算指令可以分为两种:对整型数据进行运算的指令与对浮点型数据进行运算的指令
+- 整数与浮点数的算术指令在溢出和被零除的时候也有各自不同的行为表现
+- 无论是哪种算术指令,均是使用Java虚拟机的算术类型来进行计算的
+
+- 算术指令包括
+    - 加法指令:iadd,ladd,fadd,dadd
+    - 减法指令:isub,lsub,fsub,dsub
+    - 乘法指令:imul,lmul,fmul,dmul
+    - 除法指令:idiv,ldiv,fdiv,ddiv
+    - 求余指令:irem,lrem,frem,drem
+    - 取反指令:ineg,lneg,fneg,dneg
+    - 位移指令:ishl,ishr,iushr,lshl,lshr,lushr
+    - 按位或指令:ior,lor
+    - 按位与指令:iand,land
+    - 按位异或指令:ixor,lxor
+    - 局部变量自增指令:iinc
+    - 比较指令:dcmpg,dcmpl,fcmpg,fcmpl,lcmp
+
+### 类型转换指令
+
+- 类型转换指令可以将两种不同的数值类型相互转换,这些转换操作一般用于实现用户代码中的显式类型转换操作
+    - Java虚拟机直接支持(即转换时无须显式的转换指令)以下数值类型的宽化类型转换(Widening Numeric Conversion,即小范围类型向大范围类型的安全转换)
+    - 窄化类型转换(Narrowing Numeric Conversion)时,就必须显式地使用转换指令来完成,窄化类型转换可能会导致转换结果产生不同的正负号,不同的数量级的情况,转换过程很可能会导致数值的精度丢失
+
+### 对象创建与访问指令
+
+- 虽然类实例和数组都是对象,但Java虚拟机对类实例和数组的创建与操作使用了不同的字节码指令,对象创建后,就可以通过对象访问指令获取对象实例或者数组实例中的字段或者数组元素
+    - 创建类实例的指令:new
+    - 创建数组的指令:newarray,anewarray,multianewarray
+    - 访问类字段(static字段,或者称为类变量)和实例字段(非static字段,或者称为实例变量)的指令:getfield,putfield,getstatic,putstatic
+    - 把一个数组元素加载到操作数栈的指令:baload,caload,saload,iaload,laload,faload,daload,aaload
+    - 将一个操作数栈的值储存到数组元素中的指令:bastore,castore,sastore,iastore,fastore,dastore,aastore
+    - 取数组长度的指令:arraylength
+    - 检查类实例类型的指令:instanceof,checkcast
+
+### 操作数栈管理指令
+
+- 如同操作一个普通数据结构中的堆栈那样,Java虚拟机提供了一些用于直接操作操作数栈的指令
+    - 将操作数栈的栈顶一个或两个元素出栈:pop,pop2
+    - 复制栈顶一个或两个数值并将复制值或双份的复制值重新压入栈顶:dup,dup2,dup_x1,dup2_x1,dup_x2,dup2_x2
+    - 将栈最顶端的两个数值互换:swap
+
+### 控制转移指令
+
+- 控制转移指令可以让Java虚拟机有条件或无条件地从指定位置指令(而不是控制转移指令)的下一条指令继续执行程序,从概念模型上理解,可以认为控制指令就是在有条件或无条件地修改PC寄存器的值
+    - 条件分支:
+      ifeq,iflt,ifle,ifne,ifgt,ifge,ifnull,ifnonnull,if_icmpeq,if_icmpne,if_icmplt,if_icmpgt,if_icmple,if_icmpge,if_acmpeq和if_acmpne
+    - 复合条件分支:tableswitch,lookupswitch
+    - 无条件分支:goto,goto_w,jsr,jsr_w,ret
+
+### 方法调用和返回指令
+
+- 方法调用(分派,执行过程)
+    - invokevirtual指令:用于调用对象的实例方法,根据对象的实际类型进行分派(虚方法分派),这也是Java语言中最常见的方法分派方式
+    - invokeinterface指令:用于调用接口方法,它会在运行时搜索一个实现了这个接口方法的对象,找出适合的方法进行调用
+    - invokespecial指令:用于调用一些需要特殊处理的实例方法,包括实例初始化方法,私有方法和父类方法
+    - invokestatic指令:用于调用类静态方法(static方法)
+    - invokedynamic指令:
+      用于在运行时动态解析出调用点限定符所引用的方法,并执行该方法.前面四条调用指令的分派逻辑都固化在Java虚拟机内部,用户无法改变,而invokedynamic指令的分派逻辑是由用户所设定的引导方法决定的
+
+- 方法调用指令与数据类型无关,而方法返回指令是根据返回值的类型区分的
+    - 包括ireturn(当返回值是boolean,byte,char,short和int类型时使用)
+    - lreturn,freturn,dreturn和areturn
+    - 另外还有一条return指令供声明为void的方法,实例初始化方法,类和接口的类初始化方法使用
+
+### 异常处理指令
+
+- 在Java程序中显式抛出异常的操作(throw语句)都由athrow指令来实现,除了用throw语句显式抛出异常的情况之外,<Java虚拟机规范>还规定了许多运行时异常会在其他Java虚拟机指令检测到异常状况时自动抛出
+
+### 同步指令
+
+- Java虚拟机可以支持方法级的同步和方法内部一段指令序列的同步,这两种同步结构都是使用管程(Monitor,更常见的是直接将它称为"锁")来实现的
+    - 方法级的同步是隐式的,无须通过字节码指令来控制,它实现在方法调用和返回操作之中
+
+- 同步一段指令集序列通常是由Java语言中的synchronized语句块来表示的
+    - Java虚拟机的指令集中有monitorenter和monitorexit两条指令来支持synchronized关键字的语义
+        - 正确实现synchronized关键字需要Javac编译器与Java虚拟机两者共同协作支持
+        - 编译器必须确保无论方法通过何种方式完成,方法中调用过的每条monitorenter指令都必须有其对应的monitorexit指令,而无论这个方法是正常结束还是异常结束
+
+## 公有设计,私有实现
+
+- 公有设计:Class文件格式以及字节码指令集
+- 私有实现:虚拟机实现
+
+## 小结
+
+- Class文件是Java虚拟机执行引擎的数据入口,也是Java技术体系的基础支柱之一
 
 
 
