@@ -16,7 +16,7 @@
 - [第六章 类文件结构](vm-execution-subsystem/src/chapter6.md)
 - [第七章 虚拟机类加载机制](vm-execution-subsystem/src/chapter7.md)
 - [第八章 虚拟机字节码执行引擎](vm-execution-subsystem/src/chapter8.md)
-- 第九章 类加载及执行子系统的案例与实战
+- [第九章 类加载及执行子系统的案例与实战](vm-execution-subsystem/src/chapter9.md)
 
 ## 程序编译与代码优化
 
