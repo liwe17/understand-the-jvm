@@ -20,8 +20,8 @@
 
 ## 程序编译与代码优化
 
-- 第十章 前端编译与优化
-- 第十一章 后端编译与优化
+- [第十章 前端编译与优化](compilation-optimization/src/chapter10.md)
+- [第十一章 后端编译与优化](compilation-optimization/src/chapter11.md)
 
 ## 高效并发
 
