@@ -26,5 +26,5 @@
 ## 高效并发
 
 - [第十二章 Java内存模型与线程](efficient-concurrent/src/chatper12.md)
-- 第十三章 线程安全与锁优化
+- [第十三章 线程安全与锁优化](efficient-concurrent/src/chatper13.md)
 
